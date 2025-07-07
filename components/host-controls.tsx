@@ -45,26 +45,10 @@ export function HostControls({ party, onEdit, className = "" }: HostControlsProp
   const canCancel = canCancelParty(party, user?.id)
   const canEndEarly = canEndPartyEarly(party, user?.id)
 
-  // Debug logging
-  console.log('🔍 HostControls Debug:', {
-    partyName: party.name,
-    partyHosts: party.hosts,
-    currentUser: user,
-    userId: user?.id,
-    userName: user?.name,
-    isHost,
-    canCancel,
-    canEndEarly,
-    partyStatus: party.status
-  })
-
   // Don't render if user is not a host
   if (!isHost) {
-    console.log('❌ Not rendering HostControls - user is not a host')
     return null
   }
-
-  console.log('✅ Rendering HostControls - user is a host')
 
   const handleEdit = () => {
     if (onEdit) {

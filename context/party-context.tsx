@@ -212,46 +212,50 @@ export function PartyProvider({ children }: PartyProviderProps) {
             
             // Transition upcoming parties to live when start time is reached
             if (party.status === 'upcoming' && now >= startDate) {
-              console.log(`🔄 Starting party: ${party.name}`)
+              console.log(`🔄 Starting party: ${party.name} (start time reached)`)
+              
+              // Update user stats for hosts when party starts
+              const hosts = party.hosts || []
+              const userStatsData = localStorage.getItem('fomo-user-stats')
+              const userStats = userStatsData ? JSON.parse(userStatsData) : {}
+              
+              // Increment hosted parties count for each host
+              hosts.forEach((hostName: string) => {
+                if (!userStats[hostName]) {
+                  userStats[hostName] = { hostedParties: 0, attendedParties: 0, friendCount: 0 }
+                }
+                userStats[hostName].hostedParties += 1
+                console.log(`✅ Incremented hosted parties for ${hostName}: ${userStats[hostName].hostedParties}`)
+              })
+              
+              // Save updated stats
+              localStorage.setItem('fomo-user-stats', JSON.stringify(userStats))
+              
               return { ...party, status: 'live' as const }
             }
             
             return party
           } catch (error) {
-            console.error('Error processing party status update:', error)
+            console.error('Error updating party status:', error)
             return party
           }
         })
         
+        // Only update if there are changes
         const hasChanges = updatedParties.some((party, index) => party.status !== parties[index]?.status)
-        
         if (hasChanges) {
           setParties(updatedParties)
-          // Update parties in Supabase
-          updatedParties.forEach(async (party) => {
-            try {
-              const originalParty = parties.find(p => p.id === party.id)
-              if (party.status !== originalParty?.status) {
-                await partyService.updateParty(party.id, { status: party.status })
-                
-                // If party was auto-completed, update user stats
-                if (party.status === 'completed' && originalParty?.status === 'live') {
-                  await updatePartyStats(party)
-                }
-              }
-            } catch (error) {
-              console.error('Error updating party status:', error)
-            }
-          })
+          console.log('✅ Updated party statuses:', updatedParties.map(p => ({ name: p.name, status: p.status })))
         }
       } catch (error) {
-        console.error('Error in party status update:', error)
+        console.error('Error in updatePartyStatus:', error)
       }
     }
 
+    // Run immediately
     updatePartyStatus()
     
-    // Check every 30 minutes for status updates (more frequent for auto-completion)
+    // Then run every 30 minutes
     const interval = setInterval(updatePartyStatus, 30 * 60 * 1000)
     
     return () => clearInterval(interval)
@@ -431,30 +435,19 @@ export function PartyProvider({ children }: PartyProviderProps) {
     try {
       const completedParty = await partyService.completeParty(id)
       
-      // Update user stats for hosts and attendees
-      const hosts = completedParty.hosts || []
+      // Update user stats for attendees only (hosts already got credit when party started)
       const attendees = completedParty.invites?.map((invite: Invite) => invite.name) || []
 
       // Get current user stats from localStorage
       const userStatsData = localStorage.getItem('fomo-user-stats')
       const userStats = userStatsData ? JSON.parse(userStatsData) : {}
 
-      // Update stats for hosts
-      hosts.forEach((hostName: string) => {
-        if (!userStats[hostName]) {
-          userStats[hostName] = { hostedParties: 0, attendedParties: 0, friendCount: 0 }
-        }
-        userStats[hostName].hostedParties += 1
-      })
-
       // Update stats for attendees (but not hosts to avoid double counting)
       attendees.forEach((attendeeName: string) => {
-        if (!hosts.includes(attendeeName)) {
-          if (!userStats[attendeeName]) {
-            userStats[attendeeName] = { hostedParties: 0, attendedParties: 0, friendCount: 0 }
-          }
-          userStats[attendeeName].attendedParties += 1
+        if (!userStats[attendeeName]) {
+          userStats[attendeeName] = { hostedParties: 0, attendedParties: 0, friendCount: 0 }
         }
+        userStats[attendeeName].attendedParties += 1
       })
 
       // Save updated stats
