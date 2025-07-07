@@ -30,6 +30,13 @@ interface PartyContextType {
   isUpdatingParty: boolean
   isDeletingParty: boolean
   debugParties: () => void
+  // Host permission and management functions
+  isHostOfParty: (party: Party, userId?: string) => boolean
+  canEditParty: (party: Party, userId?: string) => boolean
+  canCancelParty: (party: Party, userId?: string) => boolean
+  canEndPartyEarly: (party: Party, userId?: string) => boolean
+  endPartyEarly: (id: string) => Promise<Party>
+  cancelParty: (id: string) => Promise<Party>
 }
 
 const PartyContext = createContext<PartyContextType | undefined>(undefined)
@@ -187,7 +194,7 @@ export function PartyProvider({ children }: PartyProviderProps) {
     loadData()
   }, [user?.id])
 
-  // Update party status based on start date
+  // Update party status based on start date and auto-completion
   useEffect(() => {
     const updatePartyStatus = () => {
       try {
@@ -195,9 +202,20 @@ export function PartyProvider({ children }: PartyProviderProps) {
         const updatedParties = parties.map(party => {
           try {
             const startDate = new Date(`${party.date} ${party.time}`)
+            const endDate = new Date(startDate.getTime() + (24 * 60 * 60 * 1000)) // 24 hours after start
+            
+            // Auto-complete parties that have been live for 24+ hours
+            if (party.status === 'live' && now >= endDate) {
+              console.log(`🔄 Auto-completing party: ${party.name} (24 hours elapsed)`)
+              return { ...party, status: 'completed' as const }
+            }
+            
+            // Transition upcoming parties to live when start time is reached
             if (party.status === 'upcoming' && now >= startDate) {
+              console.log(`🔄 Starting party: ${party.name}`)
               return { ...party, status: 'live' as const }
             }
+            
             return party
           } catch (error) {
             console.error('Error processing party status update:', error)
@@ -212,8 +230,14 @@ export function PartyProvider({ children }: PartyProviderProps) {
           // Update parties in Supabase
           updatedParties.forEach(async (party) => {
             try {
-              if (party.status !== parties.find(p => p.id === party.id)?.status) {
+              const originalParty = parties.find(p => p.id === party.id)
+              if (party.status !== originalParty?.status) {
                 await partyService.updateParty(party.id, { status: party.status })
+                
+                // If party was auto-completed, update user stats
+                if (party.status === 'completed' && originalParty?.status === 'live') {
+                  await updatePartyStats(party)
+                }
               }
             } catch (error) {
               console.error('Error updating party status:', error)
@@ -227,11 +251,48 @@ export function PartyProvider({ children }: PartyProviderProps) {
 
     updatePartyStatus()
     
-    // Check every minute for status updates
-    const interval = setInterval(updatePartyStatus, 60000)
+    // Check every 30 minutes for status updates (more frequent for auto-completion)
+    const interval = setInterval(updatePartyStatus, 30 * 60 * 1000)
     
     return () => clearInterval(interval)
   }, [parties])
+
+  // Helper function to update user stats when party is completed
+  const updatePartyStats = async (party: Party) => {
+    try {
+      const hosts = party.hosts || []
+      const attendees = party.invites?.map((invite: Invite) => invite.name) || []
+
+      // Get current user stats from localStorage
+      const userStatsData = localStorage.getItem('fomo-user-stats')
+      const userStats = userStatsData ? JSON.parse(userStatsData) : {}
+
+      // Update stats for hosts
+      hosts.forEach((hostName: string) => {
+        if (!userStats[hostName]) {
+          userStats[hostName] = { hostedParties: 0, attendedParties: 0, friendCount: 0 }
+        }
+        userStats[hostName].hostedParties += 1
+      })
+
+      // Update stats for attendees (but not hosts to avoid double counting)
+      attendees.forEach((attendeeName: string) => {
+        if (!hosts.includes(attendeeName)) {
+          if (!userStats[attendeeName]) {
+            userStats[attendeeName] = { hostedParties: 0, attendedParties: 0, friendCount: 0 }
+          }
+          userStats[attendeeName].attendedParties += 1
+        }
+      })
+
+      // Save updated stats
+      localStorage.setItem('fomo-user-stats', JSON.stringify(userStats))
+      
+      console.log('✅ Updated user stats for auto-completed party:', party.name)
+    } catch (error) {
+      console.error('Error updating party stats:', error)
+    }
+  }
 
   const addParty = async (partyData: Omit<Party, 'id' | 'createdAt' | 'updatedAt'>) => {
     try {
@@ -482,6 +543,83 @@ export function PartyProvider({ children }: PartyProviderProps) {
       })
   }
 
+  // Host permission checking
+  const isHostOfParty = (party: Party, userId?: string) => {
+    if (!userId || !party.hosts) return false
+    return party.hosts.some(host => host === userId || host.toLowerCase().includes(userId.toLowerCase()))
+  }
+
+  const canEditParty = (party: Party, userId?: string) => {
+    if (!userId) return false
+    return isHostOfParty(party, userId) && (party.status === 'upcoming' || party.status === 'live')
+  }
+
+  const canCancelParty = (party: Party, userId?: string) => {
+    if (!userId) return false
+    return isHostOfParty(party, userId) && party.status === 'upcoming'
+  }
+
+  const canEndPartyEarly = (party: Party, userId?: string) => {
+    if (!userId) return false
+    return isHostOfParty(party, userId) && (party.status === 'upcoming' || party.status === 'live')
+  }
+
+  // Enhanced party management methods
+  const endPartyEarly = async (id: string) => {
+    try {
+      const party = parties.find(p => p.id === id)
+      if (!party) throw new Error('Party not found')
+      
+      if (!canEndPartyEarly(party, user?.id)) {
+        throw new Error('You do not have permission to end this party')
+      }
+
+      const completedParty = await partyService.completeParty(id)
+      
+      // Update user stats
+      await updatePartyStats(completedParty)
+      
+      // Update local state
+      setParties(prev => prev.map(party => 
+        party.id === id ? completedParty : party
+      ))
+
+      console.log('✅ Party ended early:', completedParty.name)
+      return completedParty
+    } catch (error) {
+      console.error('Error ending party early:', error)
+      throw error
+    }
+  }
+
+  const cancelParty = async (id: string) => {
+    try {
+      const party = parties.find(p => p.id === id)
+      if (!party) throw new Error('Party not found')
+      
+      if (!canCancelParty(party, user?.id)) {
+        throw new Error('You do not have permission to cancel this party')
+      }
+
+      const cancelledParty = await partyService.updateParty(id, { 
+        status: 'cancelled',
+        cancelledAt: new Date().toISOString(),
+        cancelledBy: user?.id || user?.name || 'unknown'
+      })
+      
+      // Update local state
+      setParties(prev => prev.map(party => 
+        party.id === id ? cancelledParty : party
+      ))
+
+      console.log('✅ Party cancelled:', cancelledParty.name)
+      return cancelledParty
+    } catch (error) {
+      console.error('Error cancelling party:', error)
+      throw error
+    }
+  }
+
   const value: PartyContextType = {
     parties,
     drafts,
@@ -505,6 +643,12 @@ export function PartyProvider({ children }: PartyProviderProps) {
     isUpdatingParty: false,
     isDeletingParty: false,
     debugParties,
+    isHostOfParty,
+    canEditParty,
+    canCancelParty,
+    canEndPartyEarly,
+    endPartyEarly,
+    cancelParty,
   }
 
   if (loading) {

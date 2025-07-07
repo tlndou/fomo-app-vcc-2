@@ -15,6 +15,8 @@ import { useToast } from "@/hooks/use-toast"
 import { useParties } from "@/context/party-context"
 import { BottomNavigation, type TabType } from "@/components/bottom-navigation"
 import { DraftsList } from "@/components/drafts-list"
+import { HostControls } from "@/components/host-controls"
+import { PartyStatusBadge } from "@/components/party-status-badge"
 
 function HomePage() {
   const [activeTab, setActiveTab] = useState<"active" | "inactive" | "drafts">("active")
@@ -122,15 +124,22 @@ function HomePage() {
     <Card
       key={party.id}
       className="cursor-pointer hover:shadow-md transition-shadow"
-      onClick={() => handlePartyClick(party.id)}
     >
       <CardContent className="p-6">
         <div className="flex items-start justify-between mb-4">
-          <h3 className="text-xl font-semibold">{party.name}</h3>
-          {getStatusBadge(party.status)}
+          <div className="flex-1">
+            <h3 className="text-xl font-semibold">{party.name}</h3>
+          </div>
+          <div className="flex items-center gap-2">
+            <PartyStatusBadge status={party.status} />
+            <HostControls party={party} />
+          </div>
         </div>
 
-        <div className="space-y-3 text-muted-foreground">
+        <div 
+          className="space-y-3 text-muted-foreground"
+          onClick={() => handlePartyClick(party.id)}
+        >
           <div className="flex items-center gap-2">
             <Calendar className="w-4 h-4" />
             <span>{party.date}</span>

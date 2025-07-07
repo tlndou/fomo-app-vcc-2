@@ -247,6 +247,66 @@ export const partyService = {
       throw error
     }
   },
+
+  // Cancel a party
+  async cancelParty(id: string, cancelledBy: string) {
+    try {
+      const { data, error } = await supabase
+        .from('parties')
+        .update({
+          status: 'cancelled',
+          cancelled_at: new Date().toISOString(),
+          cancelled_by: cancelledBy,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', id)
+        .select()
+      
+      if (error) throw error
+      return data[0]
+    } catch (error) {
+      console.error('Error cancelling party:', error)
+      throw error
+    }
+  },
+
+  // Get party status with time calculations
+  async getPartyStatus(id: string) {
+    try {
+      const { data, error } = await supabase
+        .from('parties')
+        .select('*')
+        .eq('id', id)
+        .single()
+      
+      if (error) throw error
+      
+      const party = data
+      const now = new Date()
+      const startDate = new Date(`${party.date} ${party.time}`)
+      const endDate = new Date(startDate.getTime() + (24 * 60 * 60 * 1000)) // 24 hours after start
+      
+      let calculatedStatus = party.status
+      
+      // Auto-calculate status if needed
+      if (party.status === 'upcoming' && now >= startDate) {
+        calculatedStatus = 'live'
+      } else if (party.status === 'live' && now >= endDate) {
+        calculatedStatus = 'completed'
+      }
+      
+      return {
+        ...party,
+        calculatedStatus,
+        startDate,
+        endDate,
+        isOverdue: party.status === 'live' && now >= endDate
+      }
+    } catch (error) {
+      console.error('Error getting party status:', error)
+      throw error
+    }
+  },
   
   // Subscribe to changes in the parties table for real-time updates
   subscribeToParties(callback: (payload: any) => void) {
