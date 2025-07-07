@@ -76,6 +76,10 @@ function HomePage() {
     router.push(`/feed?party=${partyId}`)
   }
 
+  const handleEditParty = (partyId: string) => {
+    router.push(`/edit-party/${partyId}`)
+  }
+
   const handleCreateButtonPress = () => {
     const timer = setTimeout(() => {
       setShowDrafts(true)
@@ -132,7 +136,7 @@ function HomePage() {
           </div>
           <div className="flex items-center gap-2">
             <PartyStatusBadge status={party.status} />
-            <HostControls party={party} />
+            <HostControls party={party} onEdit={() => handleEditParty(party.id)} />
           </div>
         </div>
 
