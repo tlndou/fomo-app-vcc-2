@@ -42,12 +42,12 @@ export const partyService = {
       // Convert database fields to frontend format
       const convertedParties = userParties.map(party => ({
         ...party,
-        locationTags: party.location_tags,
-        userTags: party.user_tags,
-        coHosts: party.co_hosts,
-        requireApproval: party.require_approval,
-        createdAt: party.created_at,
-        updatedAt: party.updated_at
+        locationTags: party?.location_tags || [],
+        userTags: party?.user_tags || [],
+        coHosts: party?.co_hosts || [],
+        requireApproval: party?.require_approval || false,
+        createdAt: party?.created_at,
+        updatedAt: party?.updated_at
       }))
       
       console.log('✅ Converted parties:', convertedParties)
@@ -89,12 +89,12 @@ export const partyService = {
       // Convert database fields to frontend format
       return userDrafts.map(party => ({
         ...party,
-        locationTags: party.location_tags,
-        userTags: party.user_tags,
-        coHosts: party.co_hosts,
-        requireApproval: party.require_approval,
-        createdAt: party.created_at,
-        updatedAt: party.updated_at
+        locationTags: party?.location_tags || [],
+        userTags: party?.user_tags || [],
+        coHosts: party?.co_hosts || [],
+        requireApproval: party?.require_approval || false,
+        createdAt: party?.created_at,
+        updatedAt: party?.updated_at
       }))
     } catch (error) {
       console.error('Error fetching drafts:', error)
@@ -147,15 +147,15 @@ export const partyService = {
       // Convert back to camelCase for frontend
       const convertedParty = {
         ...data[0],
-        attendees: data[0].attendees || 0,
-        hosts: data[0].hosts || ["unknown"],
-        locationTags: data[0].location_tags || [],
-        userTags: data[0].user_tags || [],
-        coHosts: data[0].co_hosts || [],
-        requireApproval: data[0].require_approval || false,
-        invites: data[0].invites || [],
-        createdAt: data[0].created_at,
-        updatedAt: data[0].updated_at
+        attendees: data[0]?.attendees || 0,
+        hosts: data[0]?.hosts || ["unknown"],
+        locationTags: data[0]?.location_tags || [],
+        userTags: data[0]?.user_tags || [],
+        coHosts: data[0]?.co_hosts || [],
+        requireApproval: data[0]?.require_approval || false,
+        invites: data[0]?.invites || [],
+        createdAt: data[0]?.created_at,
+        updatedAt: data[0]?.updated_at
       }
       
       console.log('Converted party for frontend:', convertedParty)
@@ -182,11 +182,14 @@ export const partyService = {
       if (updates.attendees !== undefined) dbUpdates.attendees = updates.attendees
       if (updates.hosts !== undefined) dbUpdates.hosts = updates.hosts
       if (updates.status !== undefined) dbUpdates.status = updates.status
-      if (updates.locationTags !== undefined) dbUpdates.location_tags = updates.locationTags
-      if (updates.userTags !== undefined) dbUpdates.user_tags = updates.userTags
-      if (updates.invites !== undefined) dbUpdates.invites = updates.invites
-      if (updates.coHosts !== undefined) dbUpdates.co_hosts = updates.coHosts
-      if (updates.requireApproval !== undefined) dbUpdates.require_approval = updates.requireApproval
+      
+      // Only include these fields if they exist in the database schema
+      // Commenting out fields that don't exist in the current schema
+      // if (updates.locationTags !== undefined) dbUpdates.location_tags = updates.locationTags
+      // if (updates.userTags !== undefined) dbUpdates.user_tags = updates.userTags
+      // if (updates.invites !== undefined) dbUpdates.invites = updates.invites
+      // if (updates.coHosts !== undefined) dbUpdates.co_hosts = updates.coHosts
+      // if (updates.requireApproval !== undefined) dbUpdates.require_approval = updates.requireApproval
       
       const { data, error } = await supabase
         .from('parties')
@@ -199,12 +202,12 @@ export const partyService = {
       // Convert back to camelCase for frontend
       return {
         ...data[0],
-        locationTags: data[0].location_tags,
-        userTags: data[0].user_tags,
-        coHosts: data[0].co_hosts,
-        requireApproval: data[0].require_approval,
-        createdAt: data[0].created_at,
-        updatedAt: data[0].updated_at
+        locationTags: data[0]?.location_tags || [],
+        userTags: data[0]?.user_tags || [],
+        coHosts: data[0]?.co_hosts || [],
+        requireApproval: data[0]?.require_approval || false,
+        createdAt: data[0]?.created_at,
+        updatedAt: data[0]?.updated_at
       }
     } catch (error) {
       console.error('Error updating party:', error)
@@ -244,6 +247,66 @@ export const partyService = {
       return data[0]
     } catch (error) {
       console.error('Error completing party:', error)
+      throw error
+    }
+  },
+
+  // Cancel a party
+  async cancelParty(id: string, cancelledBy: string) {
+    try {
+      const { data, error } = await supabase
+        .from('parties')
+        .update({
+          status: 'cancelled',
+          cancelled_at: new Date().toISOString(),
+          cancelled_by: cancelledBy,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', id)
+        .select()
+      
+      if (error) throw error
+      return data[0]
+    } catch (error) {
+      console.error('Error cancelling party:', error)
+      throw error
+    }
+  },
+
+  // Get party status with time calculations
+  async getPartyStatus(id: string) {
+    try {
+      const { data, error } = await supabase
+        .from('parties')
+        .select('*')
+        .eq('id', id)
+        .single()
+      
+      if (error) throw error
+      
+      const party = data
+      const now = new Date()
+      const startDate = new Date(`${party.date} ${party.time}`)
+      const endDate = new Date(startDate.getTime() + (24 * 60 * 60 * 1000)) // 24 hours after start
+      
+      let calculatedStatus = party.status
+      
+      // Auto-calculate status if needed
+      if (party.status === 'upcoming' && now >= startDate) {
+        calculatedStatus = 'live'
+      } else if (party.status === 'live' && now >= endDate) {
+        calculatedStatus = 'completed'
+      }
+      
+      return {
+        ...party,
+        calculatedStatus,
+        startDate,
+        endDate,
+        isOverdue: party.status === 'live' && now >= endDate
+      }
+    } catch (error) {
+      console.error('Error getting party status:', error)
       throw error
     }
   },
@@ -301,12 +364,12 @@ export const partyService = {
       // Convert back to frontend format
       return data.map(party => ({
         ...party,
-        locationTags: party.location_tags,
-        userTags: party.user_tags,
-        coHosts: party.co_hosts,
-        requireApproval: party.require_approval,
-        createdAt: party.created_at,
-        updatedAt: party.updated_at
+        locationTags: party?.location_tags || [],
+        userTags: party?.user_tags || [],
+        coHosts: party?.co_hosts || [],
+        requireApproval: party?.require_approval || false,
+        createdAt: party?.created_at,
+        updatedAt: party?.updated_at
       }))
     } catch (error) {
       console.error('Error migrating parties from localStorage:', error)
