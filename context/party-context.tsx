@@ -545,23 +545,71 @@ export function PartyProvider({ children }: PartyProviderProps) {
 
   // Host permission checking
   const isHostOfParty = (party: Party, userId?: string) => {
-    if (!userId || !party.hosts) return false
-    return party.hosts.some(host => host === userId || host.toLowerCase().includes(userId.toLowerCase()))
+    if (!userId || !party.hosts) {
+      console.log('🔍 isHostOfParty: No userId or hosts', { userId, hosts: party.hosts })
+      return false
+    }
+    
+    // Get current user data to check both ID and name
+    const storedUsers = localStorage.getItem('fomo-users')
+    const users = storedUsers ? JSON.parse(storedUsers) : {}
+    const currentUser = users[userId]
+    const userName = currentUser?.name || userId
+    
+    console.log('🔍 isHostOfParty: Checking host permissions', {
+      partyName: party.name,
+      userId,
+      userName,
+      partyHosts: party.hosts,
+      currentUser
+    })
+    
+    // Check if user is a host by ID or name
+    const isHost = party.hosts.some(host => {
+      const hostMatch = host === userId || 
+                       host === userName || 
+                       host.toLowerCase() === userId.toLowerCase() || 
+                       host.toLowerCase() === userName.toLowerCase()
+      
+      console.log(`🔍 Checking host "${host}" against user "${userId}/${userName}": ${hostMatch}`)
+      return hostMatch
+    })
+    
+    console.log('🔍 isHostOfParty result:', { partyName: party.name, isHost })
+    return isHost
   }
 
   const canEditParty = (party: Party, userId?: string) => {
-    if (!userId) return false
-    return isHostOfParty(party, userId) && (party.status === 'upcoming' || party.status === 'live')
+    if (!userId) {
+      console.log('🔍 canEditParty: No userId')
+      return false
+    }
+    const isHost = isHostOfParty(party, userId)
+    const canEdit = isHost && (party.status === 'upcoming' || party.status === 'live')
+    console.log('🔍 canEditParty:', { partyName: party.name, userId, isHost, status: party.status, canEdit })
+    return canEdit
   }
 
   const canCancelParty = (party: Party, userId?: string) => {
-    if (!userId) return false
-    return isHostOfParty(party, userId) && party.status === 'upcoming'
+    if (!userId) {
+      console.log('🔍 canCancelParty: No userId')
+      return false
+    }
+    const isHost = isHostOfParty(party, userId)
+    const canCancel = isHost && party.status === 'upcoming'
+    console.log('🔍 canCancelParty:', { partyName: party.name, userId, isHost, status: party.status, canCancel })
+    return canCancel
   }
 
   const canEndPartyEarly = (party: Party, userId?: string) => {
-    if (!userId) return false
-    return isHostOfParty(party, userId) && (party.status === 'upcoming' || party.status === 'live')
+    if (!userId) {
+      console.log('🔍 canEndPartyEarly: No userId')
+      return false
+    }
+    const isHost = isHostOfParty(party, userId)
+    const canEndEarly = isHost && (party.status === 'upcoming' || party.status === 'live')
+    console.log('🔍 canEndPartyEarly:', { partyName: party.name, userId, isHost, status: party.status, canEndEarly })
+    return canEndEarly
   }
 
   // Enhanced party management methods

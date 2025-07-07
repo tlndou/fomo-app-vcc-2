@@ -17,6 +17,7 @@ import { BottomNavigation, type TabType } from "@/components/bottom-navigation"
 import { DraftsList } from "@/components/drafts-list"
 import { HostControls } from "@/components/host-controls"
 import { PartyStatusBadge } from "@/components/party-status-badge"
+import { DebugInfo } from "@/components/debug-info"
 
 function HomePage() {
   const [activeTab, setActiveTab] = useState<"active" | "inactive" | "drafts">("active")
@@ -205,6 +206,9 @@ function HomePage() {
       </header>
 
       <div className="max-w-4xl mx-auto p-4">
+        {/* Debug Info - Temporary */}
+        <DebugInfo />
+        
         {/* Tab Navigation */}
         <div className="mb-6">
           <div className="flex gap-1 bg-muted p-1 rounded-lg w-fit">
