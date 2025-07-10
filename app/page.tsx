@@ -17,6 +17,7 @@ import { BottomNavigation, type TabType } from "@/components/bottom-navigation"
 import { DraftsList } from "@/components/drafts-list"
 import { HostControls } from "@/components/host-controls"
 import { PartyStatusBadge } from "@/components/party-status-badge"
+import { formatTimeString } from "@/lib/utils"
 
 function HomePage() {
   const [activeTab, setActiveTab] = useState<"active" | "inactive" | "drafts">("active")
@@ -151,7 +152,7 @@ function HomePage() {
 
           <div className="flex items-center gap-2">
             <Clock className="w-4 h-4" />
-            <span>{party.time}</span>
+            <span>{formatTimeString(party.time)}</span>
           </div>
 
           <div className="flex items-center gap-2">
@@ -314,7 +315,7 @@ function HomePage() {
 
                           <div className="flex items-center gap-2">
                             <Clock className="w-4 h-4" />
-                            <span>{draft.time}</span>
+                            <span>{formatTimeString(draft.time)}</span>
                           </div>
 
                           <div className="flex items-center gap-2">

@@ -25,6 +25,21 @@ export function formatTime(timestamp: Date): string {
   return timestamp.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
 }
 
+export function formatTimeString(timeString: string): string {
+  // Remove seconds from time string and convert to 12-hour format with AM/PM
+  if (timeString && timeString.includes(':')) {
+    const parts = timeString.split(':')
+    if (parts.length >= 2) {
+      const hours = parseInt(parts[0])
+      const minutes = parts[1]
+      const ampm = hours >= 12 ? 'PM' : 'AM'
+      const displayHours = hours % 12 || 12
+      return `${displayHours}:${minutes} ${ampm}`
+    }
+  }
+  return timeString
+}
+
 export function formatDate(timestamp: Date): string {
   const today = new Date()
   const yesterday = new Date(today)
