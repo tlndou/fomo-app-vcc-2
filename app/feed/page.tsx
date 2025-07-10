@@ -6,7 +6,6 @@ import { FilterBar } from "@/components/filter-bar"
 import { BottomNavigation, type TabType } from "@/components/bottom-navigation"
 import { SearchTab } from "@/components/search-tab"
 import { MessagesTab } from "@/components/messages-tab"
-import { AnnouncementsTab } from "@/components/announcements-tab"
 import { FloatingActionButton } from "@/components/floating-action-button"
 import { NotificationIcon } from "@/components/notification-icon"
 import { DraftsList } from "@/components/drafts-list"
@@ -29,6 +28,7 @@ import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Heart, MessageCircle, Share2, MoreHorizontal, MapPin, Calendar, Users } from "lucide-react"
+import { AlertsTab } from "@/components/announcements-tab"
 
 function FeedPage() {
   const [activeTab, setActiveTab] = useState<TabType>("feed")
@@ -127,8 +127,8 @@ function FeedPage() {
   // Handle tab parameter from URL (for party invites)
   useEffect(() => {
     const tab = searchParams.get("tab")
-    if (tab === "announcements") {
-      setActiveTab("announcements")
+    if (tab === "alerts") {
+      setActiveTab("alerts")
     }
   }, [searchParams])
 
@@ -463,8 +463,8 @@ function FeedPage() {
       switch (activeTab) {
         case "starred":
           return "Starred"
-        case "announcements":
-          return "Announcements"
+              case "alerts":
+        return "Alerts"
         case "search":
           return "Search"
         case "messages":
@@ -477,8 +477,8 @@ function FeedPage() {
     switch (activeTab) {
       case "starred":
         return "Starred"
-      case "announcements":
-        return "Announcements"
+      case "alerts":
+        return "Alerts"
       case "search":
         return "Search"
       case "messages":
@@ -572,8 +572,8 @@ function FeedPage() {
             />
           ) : activeTab === "messages" ? (
             <MessagesTab currentUser={currentUserWithStatus!} users={[]} posts={posts} partyName={currentParty?.name} />
-          ) : activeTab === "announcements" ? (
-            <AnnouncementsTab
+          ) : activeTab === "alerts" ? (
+            <AlertsTab
               posts={posts}
               currentUser={currentUserWithStatus!}
               users={[]}

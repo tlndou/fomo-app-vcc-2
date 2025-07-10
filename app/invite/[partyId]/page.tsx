@@ -80,19 +80,19 @@ export default function PartyInvitePage() {
     setIsJoining(true)
 
     if (isAppInstalled) {
-      // Deep link to app announcements tab
-      const deepLink = `fomoapp://feed?tab=announcements&partyId=${partyId}`
+      // Deep link to app alerts tab
+      const deepLink = `fomoapp://feed?tab=alerts&partyId=${partyId}`
 
       try {
         window.location.href = deepLink
 
         // Fallback: if deep link doesn't work, redirect to web version
         setTimeout(() => {
-          router.push(`/feed?party=${partyId}&tab=announcements`)
+          router.push(`/feed?party=${partyId}&tab=alerts`)
         }, 2000)
       } catch (error) {
         console.error("Deep link failed:", error)
-        router.push(`/feed?party=${partyId}&tab=announcements`)
+        router.push(`/feed?party=${partyId}&tab=alerts`)
       }
     } else {
       // Redirect to app store
@@ -108,7 +108,7 @@ export default function PartyInvitePage() {
   }
 
   const handleViewInBrowser = () => {
-    router.push(`/feed?party=${partyId}&tab=announcements`)
+    router.push(`/feed?party=${partyId}&tab=alerts`)
   }
 
   const spotsLeft = party.maxAttendees - party.attendees

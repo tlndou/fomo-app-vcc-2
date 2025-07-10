@@ -12,7 +12,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { useToast } from "@/hooks/use-toast"
 import { formatTimeString } from "@/lib/utils"
 
-interface AnnouncementsTabProps {
+interface AlertsTabProps {
   posts: Post[]
   currentUser: User
   users: User[]
@@ -30,7 +30,7 @@ interface AnnouncementsTabProps {
   currentParty?: Party | null
 }
 
-export function AnnouncementsTab({
+export function AlertsTab({
   posts,
   currentUser,
   users,
@@ -46,9 +46,9 @@ export function AnnouncementsTab({
   onDeleteComment,
   onPartyCancelled,
   currentParty,
-}: AnnouncementsTabProps) {
+}: AlertsTabProps) {
   const announcementPosts = posts.filter((post) => post.user.isHost)
-  const [activeSubTab, setActiveSubTab] = useState<"announcements" | "details">("announcements")
+  const [activeSubTab, setActiveSubTab] = useState<"alerts" | "details">("alerts")
   const { toast } = useToast()
 
   // Check if current user is a host
@@ -91,13 +91,13 @@ export function AnnouncementsTab({
       <div className="bg-card p-4 border-b border-border">
         <div className="flex gap-1 bg-muted p-1 rounded-lg w-fit">
           <Button
-            variant={activeSubTab === "announcements" ? "default" : "ghost"}
+            variant={activeSubTab === "alerts" ? "default" : "ghost"}
             size="sm"
-            onClick={() => setActiveSubTab("announcements")}
+            onClick={() => setActiveSubTab("alerts")}
             className="flex items-center gap-1"
           >
             <Megaphone className="w-3 h-3" />
-            Announcements
+            Alerts
           </Button>
           <Button
             variant={activeSubTab === "details" ? "default" : "ghost"}
@@ -232,8 +232,8 @@ export function AnnouncementsTab({
             {announcementPosts.length === 0 ? (
               <div className="text-center text-muted-foreground mt-8">
                 <Megaphone className="w-12 h-12 mx-auto mb-4 text-muted-foreground/50" />
-                <h3 className="text-lg font-medium mb-2">No announcements yet</h3>
-                <p className="text-sm">The party host hasn't made any announcements</p>
+                        <h3 className="text-lg font-medium mb-2">No alerts yet</h3>
+        <p className="text-sm">The party host hasn't made any alerts</p>
               </div>
             ) : (
               announcementPosts
