@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button"
 import { Home, Star, Megaphone, Search, MessageCircle, Clock } from "lucide-react"
 import { useDrafts } from "@/context/draft-context"
 
-export type TabType = "feed" | "starred" | "announcements" | "search" | "messages" | "drafts"
+export type TabType = "feed" | "starred" | "alerts" | "search" | "messages" | "drafts"
 
 interface BottomNavigationProps {
   activeTab: TabType
@@ -21,7 +21,7 @@ export function BottomNavigation({ activeTab, onTabChange, showDrafts = true }: 
   const tabs = [
     { id: "feed" as const, label: "Feed", icon: Home },
     { id: "starred" as const, label: "Starred", icon: Star },
-    { id: "announcements" as const, label: "Announcements", icon: Megaphone },
+    { id: "alerts" as const, label: "Alerts", icon: Megaphone },
     { id: "search" as const, label: "Search", icon: Search },
     { id: "messages" as const, label: "Messages", icon: MessageCircle },
     ...(showDrafts ? [{
