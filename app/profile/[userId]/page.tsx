@@ -404,9 +404,9 @@ function ProfilePage() {
             {/* Name and Username */}
             <h1 className="text-2xl font-bold mb-1">{user.name}</h1>
             <p className="text-gray-500 mb-4">@{user.username}</p>
-
-            {/* Age and Star Sign */}
-            {(user.age || user.starSign) && (
+          
+            {/* Age and Star Sign - Commented out for privacy */}
+            {/* {(user.age || user.starSign) && (
               <div className="flex justify-center gap-4 text-sm text-gray-500 mb-4">
                 {user.age && (
                   <span>{user.age} years old</span>
@@ -418,7 +418,7 @@ function ProfilePage() {
                   <span>{user.starSign}</span>
                 )}
               </div>
-            )}
+            )} */}            
 
             {/* Bio */}
             {user.bio && <p className="text-gray-700 mb-6 max-w-md mx-auto">{user.bio}</p>}

@@ -362,6 +362,7 @@ function CreatePartyPage() {
                     <Input
                       id="start-time"
                       type="time"
+                      step="60"
                       value={startTime}
                       onChange={(e) => setStartTime(e.target.value)}
                       className="mt-1"

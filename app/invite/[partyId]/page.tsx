@@ -9,6 +9,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Separator } from "@/components/ui/separator"
 import { Calendar, MapPin, Users, Smartphone, Download, ExternalLink, PartyPopper } from "lucide-react"
 import type { Party } from "@/types/party"
+import { formatTimeString } from "@/lib/utils"
 
 interface PartyInvite extends Omit<Party, "hosts"> {
   description: string
@@ -192,7 +193,7 @@ export default function PartyInvitePage() {
               <Calendar className="w-5 h-5 text-purple-600 mt-0.5" />
               <div>
                 <div className="font-semibold">{party.date}</div>
-                <div className="text-gray-600">Starting at {party.time}</div>
+                <div className="text-gray-600">Starting at {formatTimeString(party.time)}</div>
               </div>
             </div>
 

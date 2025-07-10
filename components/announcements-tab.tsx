@@ -10,6 +10,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { useToast } from "@/hooks/use-toast"
+import { formatTimeString } from "@/lib/utils"
 
 interface AnnouncementsTabProps {
   posts: Post[]
@@ -127,7 +128,7 @@ export function AnnouncementsTab({
                   <Calendar className="w-5 h-5 text-purple-600" />
                   <div>
                     <div className="font-medium">Date & Time</div>
-                    <div className="text-muted-foreground">{currentParty?.date} at {currentParty?.time}</div>
+                    <div className="text-muted-foreground">{currentParty?.date} at {formatTimeString(currentParty?.time || "")}</div>
                   </div>
                 </div>
                 <div className="flex items-center gap-3">

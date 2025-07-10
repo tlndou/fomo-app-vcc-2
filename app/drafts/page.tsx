@@ -10,6 +10,7 @@ import type { Party } from "@/types/party"
 import { ProtectedRoute } from "@/components/protected-route"
 import { HamburgerMenu } from "@/components/hamburger-menu"
 import { NotificationIcon } from "@/components/notification-icon"
+import { formatTimeString } from "@/lib/utils"
 
 // Mock drafts data - in a real app, this would come from your database
 const mockDrafts: Party[] = []
@@ -69,7 +70,7 @@ function DraftsPage() {
 
           <div className="flex items-center gap-2">
             <Clock className="w-4 h-4" />
-            <span>{formatTime(draft.time)}</span>
+            <span>{formatTimeString(draft.time)}</span>
           </div>
 
           <div className="flex items-center gap-2">
