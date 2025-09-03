@@ -175,7 +175,7 @@ export async function getCachedUserFriends(userId: string): Promise<UserFriend[]
     }
 
     // Transform the data to match UserFriend interface
-    const friends: UserFriend[] = data?.map(item => {
+    const friends: UserFriend[] = data?.map((item: any) => {
       // Handle case where friend might be an array or null
       const friend = Array.isArray(item.friend) ? item.friend[0] : item.friend
       

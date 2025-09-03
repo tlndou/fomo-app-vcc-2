@@ -1,9 +1,9 @@
 "use client"
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react'
-import type { Party, Invite, CoHost, LocationTag, UserTag } from '@/types/party'
+import type { Party, Invite } from '@/types/party'
 import { useAuth } from '@/context/auth-context'
-import { partyService, postService } from '@/lib/party-service'
+import { partyService } from '@/lib/party-service'
 import { supabase } from '@/lib/supabase'
 
 interface PartyContextType {
@@ -108,7 +108,7 @@ export function PartyProvider({ children }: PartyProviderProps) {
             if (allParties && allParties.length > 0) {
               console.log('🔍 Found parties in fallback:', allParties)
               // Convert and use all parties as fallback
-              const fallbackParties = allParties.map(party => ({
+              const fallbackParties = allParties.map((party: any) => ({
                 ...party,
                 locationTags: party.location_tags,
                 userTags: party.user_tags,
@@ -530,7 +530,7 @@ export function PartyProvider({ children }: PartyProviderProps) {
     supabase
       .from('parties')
       .select('*')
-      .then(({ data, error }) => {
+      .then(({ data, error }: { data: any; error: any }) => {
         console.log('🔍 Debug: All parties in Supabase:', data)
         console.log('🔍 Debug: Supabase error:', error)
       })

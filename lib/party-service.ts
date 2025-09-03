@@ -29,7 +29,7 @@ export const partyService = {
       console.log('🔍 Raw parties data from Supabase:', data)
       
       // Filter parties where the user is a host (by name)
-      const userParties = (data || []).filter(party => {
+      const userParties = (data || []).filter((party: any) => {
         const hosts = party.hosts || []
         console.log(`🔍 Checking party "${party.name}" with hosts:`, hosts)
         const isHost = hosts.some((host: string) => host === userName)
@@ -40,7 +40,7 @@ export const partyService = {
       console.log('✅ Filtered parties for user:', userParties)
       
       // Convert database fields to frontend format
-      const convertedParties = userParties.map(party => ({
+      const convertedParties = userParties.map((party: any) => ({
         ...party,
         locationTags: party?.location_tags || [],
         userTags: party?.user_tags || [],
@@ -79,7 +79,7 @@ export const partyService = {
       const userName = currentUser?.name || userId
       
       // Filter drafts where the user is a host (by name)
-      const userDrafts = (data || []).filter(party => {
+      const userDrafts = (data || []).filter((party: any) => {
         const hosts = party.hosts || []
         return hosts.some((host: string) => host === userName)
       })
@@ -87,7 +87,7 @@ export const partyService = {
       console.log('Filtered drafts for user:', userDrafts)
       
       // Convert database fields to frontend format
-      return userDrafts.map(party => ({
+      return userDrafts.map((party: any) => ({
         ...party,
         locationTags: party?.location_tags || [],
         userTags: party?.user_tags || [],
@@ -317,7 +317,7 @@ export const partyService = {
       .channel('public:parties')
       .on('postgres_changes', 
         { event: '*', schema: 'public', table: 'parties' }, 
-        payload => {
+        (payload: any) => {
           callback(payload)
         }
       )
@@ -336,7 +336,7 @@ export const partyService = {
       if (!allParties.length) return []
       
       // Convert localStorage parties to database format
-      const partiesForDatabase = allParties.map(party => ({
+      const partiesForDatabase = allParties.map((party: any) => ({
         id: party.id,
         name: party.name,
         date: party.date,
@@ -362,7 +362,7 @@ export const partyService = {
       localStorage.removeItem(`fomo-drafts-${userId}`)
       
       // Convert back to frontend format
-      return data.map(party => ({
+      return data.map((party: any) => ({
         ...party,
         locationTags: party?.location_tags || [],
         userTags: party?.user_tags || [],
@@ -399,7 +399,7 @@ export const postService = {
       if (error) throw error
       
       // Convert timestamp strings back to Date objects
-      return (data || []).map(post => ({
+      return (data || []).map((post: any) => ({
         ...post,
         userId: post.user_id,
         userName: post.user_name,
@@ -474,7 +474,7 @@ export const postService = {
           table: 'posts',
           filter: `party_id=eq.${partyId}`
         }, 
-        payload => {
+        (payload: any) => {
           callback(payload)
         }
       )
@@ -522,7 +522,7 @@ export const postService = {
       localStorage.removeItem(postsKey)
       
       // Convert back to frontend format
-      return data.map(post => ({
+      return data.map((post: any) => ({
         ...post,
         userId: post.user_id,
         userName: post.user_name,

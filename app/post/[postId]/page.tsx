@@ -122,6 +122,8 @@ function PostDetailPage() {
       content,
       timestamp: new Date(),
       replies: [],
+      likes: 0,
+      userLiked: false,
       gifUrl,
     }
 

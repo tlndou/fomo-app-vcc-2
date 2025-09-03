@@ -28,7 +28,7 @@ export function useCachedUserProfile(userId: string, options: UseCachedDataOptio
   const [error, setError] = useState<Error | null>(null)
 
   const fetchData = useCallback(async () => {
-    if (!userId || !options.enabled) {
+    if (!userId || options.enabled === false) {
       setLoading(false)
       return
     }
@@ -73,7 +73,7 @@ export function useCachedUserParties(userId: string, options: UseCachedDataOptio
   const [error, setError] = useState<Error | null>(null)
 
   const fetchData = useCallback(async () => {
-    if (!userId || !options.enabled) {
+    if (!userId || options.enabled === false) {
       setLoading(false)
       return
     }
@@ -118,7 +118,7 @@ export function useCachedPartyDetails(partyId: string, options: UseCachedDataOpt
   const [error, setError] = useState<Error | null>(null)
 
   const fetchData = useCallback(async () => {
-    if (!partyId || !options.enabled) {
+    if (!partyId || options.enabled === false) {
       setLoading(false)
       return
     }
@@ -163,7 +163,7 @@ export function useCachedUserFriends(userId: string, options: UseCachedDataOptio
   const [error, setError] = useState<Error | null>(null)
 
   const fetchData = useCallback(async () => {
-    if (!userId || !options.enabled) {
+    if (!userId || options.enabled === false) {
       setLoading(false)
       return
     }
@@ -208,7 +208,7 @@ export function useCachedUserPreferences(userId: string, options: UseCachedDataO
   const [error, setError] = useState<Error | null>(null)
 
   const fetchData = useCallback(async () => {
-    if (!userId || !options.enabled) {
+    if (!userId || options.enabled === false) {
       setLoading(false)
       return
     }
@@ -299,7 +299,7 @@ export function useCacheAwareData<T>(
   const [error, setError] = useState<Error | null>(null)
 
   const fetchData = useCallback(async () => {
-    if (!options.enabled) {
+    if (options.enabled === false) {
       setLoading(false)
       return
     }
