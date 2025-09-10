@@ -291,8 +291,11 @@ export const partyService = {
       
       let calculatedStatus = party.status
       
-      // Auto-calculate status if needed
-      if (party.status === 'upcoming' && now >= startDate) {
+      // Auto-calculate status if needed (but never change final states)
+      if (party.status === 'cancelled' || party.status === 'completed') {
+        // Final states should not change regardless of time
+        calculatedStatus = party.status
+      } else if (party.status === 'upcoming' && now >= startDate) {
         calculatedStatus = 'live'
       } else if (party.status === 'live' && now >= endDate) {
         calculatedStatus = 'completed'
