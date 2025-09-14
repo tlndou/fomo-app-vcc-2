@@ -46,15 +46,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const getSession = async () => {
       const { data: { session } } = await supabase.auth.getSession()
       if (session?.user) {
-        console.log('🔍 Session user data:', session.user)
-        console.log('🔍 User metadata:', session.user.user_metadata)
-        
         // Get user profile from localStorage
         const storedUsers = localStorage.getItem('fomo-users')
         const users = storedUsers ? JSON.parse(storedUsers) : {}
         const storedUserData = users[session.user.id]
-        
-        console.log('🔍 Stored user data:', storedUserData)
         
         const userData: User = {
           id: session.user.id,
@@ -68,7 +63,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           age: session.user.user_metadata?.age || storedUserData?.age,
         }
         
-        console.log('🔍 Final user data:', userData)
         setUser(userData)
 
         // Store user data in localStorage for other users to access
@@ -92,20 +86,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event: any, session: any) => {
-        console.log('🔍 Auth state change - Event:', event)
-        console.log('🔍 Auth state change - Session:', session)
-        
+      async (_event: any, session: any) => {
         if (session?.user) {
-          console.log('🔍 Auth state change - Session user data:', session.user)
-          console.log('🔍 Auth state change - User metadata:', session.user.user_metadata)
-          
           // Get user profile from localStorage
           const storedUsers = localStorage.getItem('fomo-users')
           const users = storedUsers ? JSON.parse(storedUsers) : {}
           const storedUserData = users[session.user.id]
-          
-          console.log('🔍 Auth state change - Stored user data:', storedUserData)
           
           // Prioritize user metadata from Supabase, fallback to localStorage, then defaults
           const userData: User = {
@@ -120,7 +106,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             age: session.user.user_metadata?.age || storedUserData?.age,
           }
           
-          console.log('🔍 Auth state change - Final user data:', userData)
           setUser(userData)
 
           // Update localStorage with the latest data
@@ -137,9 +122,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           }
           
           localStorage.setItem('fomo-users', JSON.stringify(users))
-          console.log('🔍 Auth state change - Updated localStorage with user data')
         } else {
-          console.log('🔍 Auth state change - No session, clearing user')
           setUser(null)
         }
         setLoading(false)
@@ -155,8 +138,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   const signUp = async (email: string, password: string, name: string, username: string, starSign?: string, age?: number) => {
-    console.log('🔧 SignUp: Starting signup process with data:', { email, name, username, starSign, age })
-    
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
@@ -172,13 +153,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     })
     
     if (error) {
-      console.error('❌ SignUp: Supabase error:', error)
       throw error
     }
-
-    console.log('🔧 SignUp: Supabase response:', data)
-    console.log('🔧 SignUp: User data from response:', data.user)
-    console.log('🔧 SignUp: User metadata from response:', data.user?.user_metadata)
 
     // Store user data in localStorage
     if (data.user) {
@@ -200,13 +176,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       users[data.user.id] = userData
       localStorage.setItem('fomo-users', JSON.stringify(users))
       
-      console.log('🔧 SignUp: User data stored in localStorage')
-      
       // Also set the user immediately if we have the data
       setUser(userData)
     }
-    
-    console.log('🔧 SignUp: Signup process completed')
   }
 
   const signOut = async () => {
@@ -275,8 +247,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const users = JSON.parse(storedUsers)
     users[user.id] = user
     localStorage.setItem('fomo-users', JSON.stringify(users))
-    
-    console.log('🔍 User data synced to localStorage')
   }
 
   // Temporary function for debugging - can be called from browser console
@@ -515,13 +485,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     ;(window as any).forceRefreshUserData = forceRefreshUserData
   }
 
-  const handleAuthSuccess = (success: unknown) => {
-    console.log('🔧 Auth success:', success)
-  }
-
-  const handleAuthError = (error: unknown) => {
-    console.error('❌ Auth error:', error)
-  }
 
   const value: AuthContextType = {
     user,
