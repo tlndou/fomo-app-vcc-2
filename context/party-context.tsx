@@ -92,8 +92,7 @@ export function PartyProvider({ children }: PartyProviderProps) {
           partyService.getDrafts(user.id)
         ])
         
-        console.log('Loaded parties:', partiesData)
-        console.log('Loaded drafts:', draftsData)
+        console.log('Loaded parties:', partiesData.length, 'drafts:', draftsData.length)
         
         // If no parties found, try loading all parties as fallback
         if (partiesData.length === 0) {
@@ -666,9 +665,7 @@ export function PartyProvider({ children }: PartyProviderProps) {
       }
 
       const cancelledParty = await partyService.updateParty(id, { 
-        status: 'cancelled',
-        cancelledAt: new Date().toISOString(),
-        cancelledBy: user?.id || user?.name || 'unknown'
+        status: 'cancelled'
       })
       
       // Update local state

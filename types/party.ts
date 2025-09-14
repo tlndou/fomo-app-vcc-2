@@ -7,7 +7,7 @@ export interface Party {
   description?: string
   attendees: number
   hosts: string[]
-  status: "live" | "upcoming" | "completed" | "draft" | "cancelled"
+  status: "live" | "upcoming" | "completed" | "draft" | "canceled" | "cancelled"
   locationTags?: LocationTag[]
   userTags?: UserTag[]
   invites?: Invite[]

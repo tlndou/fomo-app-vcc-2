@@ -182,6 +182,7 @@ export const partyService = {
       if (updates.attendees !== undefined) dbUpdates.attendees = updates.attendees
       if (updates.hosts !== undefined) dbUpdates.hosts = updates.hosts
       if (updates.status !== undefined) dbUpdates.status = updates.status
+      // Note: cancelled_at and cancelled_by columns don't exist in the actual database yet
       
       // Only include these fields if they exist in the database schema
       // Commenting out fields that don't exist in the current schema
