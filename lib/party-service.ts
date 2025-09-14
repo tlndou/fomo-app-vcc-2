@@ -6,14 +6,9 @@ export const partyService = {
   // Get all parties for a user
   async getParties(userId: string) {
     try {
-      console.log('🔍 Fetching parties from Supabase for user:', userId)
-      
       // Use sync service to get user profile for proper filtering
       const userProfile = await partyService.getUserProfile(userId)
       const userName = userProfile?.name || userId
-      
-      console.log('🔍 User profile from sync service:', userProfile)
-      console.log('🔍 Using user name for filtering:', userName)
       
       const { data, error } = await supabase
         .from('parties')
@@ -22,22 +17,16 @@ export const partyService = {
         .order('created_at', { ascending: false })
       
       if (error) {
-        console.error('❌ Supabase error:', error)
+        console.error('❌ Error fetching parties:', error)
         throw error
       }
-      
-      console.log('🔍 Raw parties data from Supabase:', data)
       
       // Filter parties where the user is a host (by name)
       const userParties = (data || []).filter((party: any) => {
         const hosts = party.hosts || []
-        console.log(`🔍 Checking party "${party.name}" with hosts:`, hosts)
         const isHost = hosts.some((host: string) => host === userName)
-        console.log(`🔍 Is user "${userName}" a host? ${isHost}`)
         return isHost
       })
-      
-      console.log('✅ Filtered parties for user:', userParties)
       
       // Convert database fields to frontend format
       const convertedParties = userParties.map((party: any) => ({
@@ -50,7 +39,6 @@ export const partyService = {
         updatedAt: party?.updated_at
       }))
       
-      console.log('✅ Converted parties:', convertedParties)
       return convertedParties
     } catch (error) {
       console.error('❌ Error fetching parties:', error)
@@ -61,7 +49,6 @@ export const partyService = {
   // Get all drafts for a user
   async getDrafts(userId: string) {
     try {
-      console.log('Fetching drafts from Supabase for user:', userId)
       const { data, error } = await supabase
         .from('parties')
         .select('*')
@@ -69,8 +56,6 @@ export const partyService = {
         .order('created_at', { ascending: false })
       
       if (error) throw error
-      
-      console.log('Raw drafts data from Supabase:', data)
       
       // Get user name from localStorage to filter drafts
       const storedUsers = localStorage.getItem('fomo-users')
@@ -83,8 +68,6 @@ export const partyService = {
         const hosts = party.hosts || []
         return hosts.some((host: string) => host === userName)
       })
-      
-      console.log('Filtered drafts for user:', userDrafts)
       
       // Convert database fields to frontend format
       return userDrafts.map((party: any) => ({
@@ -105,7 +88,6 @@ export const partyService = {
   // Create a new party
   async createParty(party: Omit<Party, 'id' | 'createdAt' | 'updatedAt'>) {
     try {
-      console.log('Creating party with data:', party)
       const now = new Date().toISOString()
       
       // Generate a proper UUID
@@ -130,19 +112,15 @@ export const partyService = {
         updated_at: now,
       }
       
-      console.log('Party data for database:', partyWithTimestamp)
-      
       const { data, error } = await supabase
         .from('parties')
         .insert(partyWithTimestamp)
         .select()
       
       if (error) {
-        console.error('Supabase insert error:', error)
+        console.error('Error creating party:', error)
         throw error
       }
-      
-      console.log('Party created successfully:', data[0])
       
       // Convert back to camelCase for frontend
       const convertedParty = {
@@ -158,7 +136,6 @@ export const partyService = {
         updatedAt: data[0]?.updated_at
       }
       
-      console.log('Converted party for frontend:', convertedParty)
       return convertedParty
     } catch (error) {
       console.error('Error creating party:', error)
