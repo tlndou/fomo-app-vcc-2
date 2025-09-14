@@ -182,6 +182,7 @@ export const partyService = {
       if (updates.attendees !== undefined) dbUpdates.attendees = updates.attendees
       if (updates.hosts !== undefined) dbUpdates.hosts = updates.hosts
       if (updates.status !== undefined) dbUpdates.status = updates.status
+      // Note: cancelled_at and cancelled_by columns don't exist in the actual database yet
       
       // Only include these fields if they exist in the database schema
       // Commenting out fields that don't exist in the current schema
@@ -291,8 +292,11 @@ export const partyService = {
       
       let calculatedStatus = party.status
       
-      // Auto-calculate status if needed
-      if (party.status === 'upcoming' && now >= startDate) {
+      // Auto-calculate status if needed (but never change final states)
+      if (party.status === 'cancelled' || party.status === 'completed') {
+        // Final states should not change regardless of time
+        calculatedStatus = party.status
+      } else if (party.status === 'upcoming' && now >= startDate) {
         calculatedStatus = 'live'
       } else if (party.status === 'live' && now >= endDate) {
         calculatedStatus = 'completed'

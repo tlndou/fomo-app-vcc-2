@@ -92,8 +92,7 @@ export function PartyProvider({ children }: PartyProviderProps) {
           partyService.getDrafts(user.id)
         ])
         
-        console.log('Loaded parties:', partiesData)
-        console.log('Loaded drafts:', draftsData)
+        console.log('Loaded parties:', partiesData.length, 'drafts:', draftsData.length)
         
         // If no parties found, try loading all parties as fallback
         if (partiesData.length === 0) {
@@ -201,6 +200,11 @@ export function PartyProvider({ children }: PartyProviderProps) {
         const now = new Date()
         const updatedParties = parties.map(party => {
           try {
+            // Skip status transitions for cancelled and completed parties - they are final states
+            if (party.status === 'cancelled' || party.status === 'completed') {
+              return party
+            }
+            
             const startDate = new Date(`${party.date} ${party.time}`)
             const endDate = new Date(startDate.getTime() + (24 * 60 * 60 * 1000)) // 24 hours after start
             
@@ -211,6 +215,7 @@ export function PartyProvider({ children }: PartyProviderProps) {
             }
             
             // Transition upcoming parties to live when start time is reached
+            // Note: cancelled parties cannot transition to live (they stay cancelled)
             if (party.status === 'upcoming' && now >= startDate) {
               console.log(`🔄 Starting party: ${party.name} (start time reached)`)
               
@@ -244,8 +249,24 @@ export function PartyProvider({ children }: PartyProviderProps) {
         // Only update if there are changes
         const hasChanges = updatedParties.some((party, index) => party.status !== parties[index]?.status)
         if (hasChanges) {
+          // Update local state immediately for UI responsiveness
           setParties(updatedParties)
           console.log('✅ Updated party statuses:', updatedParties.map(p => ({ name: p.name, status: p.status })))
+          
+          // Persist status changes to Supabase database
+          updatedParties.forEach(async (party, index) => {
+            if (party.status !== parties[index]?.status) {
+              try {
+                console.log(`💾 Persisting status change for ${party.name}: ${parties[index]?.status} → ${party.status}`)
+                await partyService.updateParty(party.id, { status: party.status })
+                console.log(`✅ Successfully persisted ${party.name} status to database`)
+              } catch (error) {
+                console.error(`❌ Failed to persist status change for ${party.name}:`, error)
+                // Note: We don't revert the local state change since the user still sees the correct status
+                // The next app reload will show the correct calculated status anyway
+              }
+            }
+          })
         }
       } catch (error) {
         console.error('Error in updatePartyStatus:', error)
@@ -600,7 +621,8 @@ export function PartyProvider({ children }: PartyProviderProps) {
       return false
     }
     const isHost = isHostOfParty(party, userId)
-    const canEndEarly = isHost && (party.status === 'upcoming' || party.status === 'live')
+    // Only live parties can be ended early (upcoming parties should be cancelled instead)
+    const canEndEarly = isHost && party.status === 'live'
     console.log('🔍 canEndPartyEarly:', { partyName: party.name, userId, isHost, status: party.status, canEndEarly })
     return canEndEarly
   }
@@ -643,9 +665,7 @@ export function PartyProvider({ children }: PartyProviderProps) {
       }
 
       const cancelledParty = await partyService.updateParty(id, { 
-        status: 'cancelled',
-        cancelledAt: new Date().toISOString(),
-        cancelledBy: user?.id || user?.name || 'unknown'
+        status: 'cancelled'
       })
       
       // Update local state
